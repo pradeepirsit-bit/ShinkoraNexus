@@ -1,363 +1,1138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bike Roar Rater - TFJS On-Device</title>
-    
-    <!-- Load TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-    <!-- Load Teachable Machine Audio Extension (Handles complex FFT/Spectrogram math automatically) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaunchPad · App Command Centre</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="LaunchPad" />
+    <link rel="manifest" id="manifestLink" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- Google Fonts – Inter for minimalism -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 
     <style>
-        :root {
-            --primary: #ff4500;
-            --secondary: #222;
-            --bg: #0a0a0a;
-            --text: #ffffff;
-            --accent: #00ff7f;
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f6f8fa;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 3rem 1.5rem;
+            color: #1a1a2e;
+        }
+
+        /* ---------- MAIN CONTAINER ---------- */
+        .hub-container {
+            max-width: 1100px;
+            width: 100%;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            transition: all 0.2s ease;
+        }
+
+        /* ---------- HEADER ---------- */
+        .hub-header {
+            text-align: left;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #eaeef2;
+            margin-bottom: 2.5rem;
+        }
+
+        .hub-header .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.4px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .hub-header .logo i {
+            color: #1a1a2e;
+            font-size: 1.6rem;
+        }
+
+        .hub-header .subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+            font-weight: 400;
+        }
+
+        .hub-header .subtitle i {
+            color: #1a1a2e;
+            margin-right: 0.3rem;
+        }
+
+        /* ---------- MAIN WEBSITE SPOTLIGHT ---------- */
+        .main-site-card {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 1.8rem 2.2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            color: white;
+            transition: box-shadow 0.2s ease;
+            box-shadow: 0 4px 20px rgba(26, 26, 46, 0.12);
+        }
+
+        .main-site-card:hover {
+            box-shadow: 0 8px 30px rgba(26, 26, 46, 0.18);
+        }
+
+        .main-site-text {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .main-site-text .icon-circle {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            text-align: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
         }
 
-        .container {
-            background-color: var(--secondary);
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(255, 69, 0, 0.15);
-            width: 90%;
-            max-width: 450px;
-            position: relative;
-            overflow: hidden;
+        .main-site-text h2 {
+            font-weight: 500;
+            font-size: 1.2rem;
+            letter-spacing: -0.2px;
         }
 
-        /* Top highlight bar */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
+        .main-site-text p {
+            opacity: 0.6;
+            font-size: 0.85rem;
+            margin-top: 0.1rem;
+            font-weight: 300;
         }
 
-        h1 { margin-top: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
-        p { color: #aaaaaa; font-size: 0.95rem; margin-bottom: 25px; }
+        .main-site-btn {
+            background: white;
+            color: #1a1a2e;
+            border: none;
+            padding: 0.5rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
 
-        #record-btn {
-            background: linear-gradient(145deg, #ff5722, #e63e00);
+        .main-site-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.01);
+        }
+
+        .main-site-btn i {
+            font-size: 0.8rem;
+        }
+
+        /* ---------- SECTION TITLE ---------- */
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .section-title .left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #1a1a2e;
+            letter-spacing: -0.2px;
+        }
+
+        .section-title .left i {
+            color: #1a1a2e;
+            font-size: 1.2rem;
+            opacity: 0.6;
+        }
+
+        .section-title .left span {
+            font-weight: 400;
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-left: 0.3rem;
+        }
+
+        .add-app-btn {
+            background: #1a1a2e;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 90px; height: 90px;
-            font-size: 32px;
+            padding: 0.45rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(255, 69, 0, 0.4);
-            margin: 10px auto 25px auto;
-            display: flex; align-items: center; justify-content: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
         }
 
-        #record-btn:active { transform: scale(0.9); }
-        
-        #record-btn.recording {
-            background: #dc143c;
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        .add-app-btn:hover {
+            background: #2d2d4a;
+            transform: scale(1.02);
         }
 
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7); }
-            70% { box-shadow: 0 0 0 25px rgba(220, 20, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0); }
+        .add-app-btn i {
+            font-size: 0.8rem;
         }
 
-        /* Progress Bar for the 5s capture */
-        .progress-container { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-bottom: 15px; display: none; overflow: hidden; }
-        .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.1s linear; }
-
-        .results { display: none; animation: slideUp 0.5s ease-out forwards; border-top: 1px solid #333; padding-top: 20px; }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* ---------- APP GRID ---------- */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.2rem;
         }
 
-        .score-box { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .score-display { font-size: 4rem; font-weight: 900; color: var(--accent); margin: 0; line-height: 1; text-shadow: 0 0 15px rgba(0,255,127,0.3); }
-        .bonus-text { font-size: 0.8rem; color: #ffeb3b; margin-top: 5px; }
-
-        .bike-badge {
-            display: inline-block; padding: 6px 12px; border-radius: 6px;
-            background: #333; font-weight: bold; font-size: 1.1rem; margin: 10px 0;
-            border-left: 4px solid var(--primary);
+        /* ---------- APP CARD (minimal) ---------- */
+        .app-card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 1.4rem 1.4rem 1.2rem;
+            border: 1px solid #eaeef2;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
         }
 
-        .trash-talk {
-            font-size: 1.1rem; font-style: italic; background: rgba(255,255,255,0.05);
-            padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px solid #444;
+        .app-card:hover {
+            border-color: #d0d5db;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
         }
 
-        #status { color: #888; font-size: 0.9rem; font-weight: 500; height: 20px; }
+        .app-card .new-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #1a1a2e;
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            z-index: 2;
+        }
+
+        .app-card .new-badge i {
+            font-size: 0.4rem;
+        }
+
+        .app-card .app-icon {
+            font-size: 1.6rem;
+            color: #1a1a2e;
+            margin-bottom: 0.6rem;
+            width: 42px;
+            height: 42px;
+            background: #f1f3f5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .app-card .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .app-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 0.2rem;
+            padding-right: 20px;
+            letter-spacing: -0.2px;
+        }
+
+        .app-card .app-desc {
+            color: #6b7280;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            flex: 1;
+            margin: 0.2rem 0 0.5rem 0;
+            font-weight: 400;
+        }
+
+        .app-card .app-date {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .app-card .app-date i {
+            font-size: 0.6rem;
+        }
+
+        .app-card .app-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            border-top: 1px solid #f0f2f4;
+            padding-top: 0.7rem;
+        }
+
+        .app-card .app-status {
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #22a65e;
+            background: #eaf5ef;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .app-card .app-status.pending {
+            color: #b45309;
+            background: #fdf0e6;
+        }
+
+        .app-card .app-status.maintenance {
+            color: #6b5b9e;
+            background: #f0ecf7;
+        }
+
+        .app-card .app-link {
+            color: #1a1a2e;
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        .app-card .app-link:hover {
+            opacity: 1;
+            gap: 0.5rem;
+        }
+
+        .app-card .app-link i {
+            font-size: 0.7rem;
+        }
+
+        /* ---------- DELETE BUTTON (minimal) ---------- */
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #d1d5db;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0.1rem 0.3rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .delete-btn:hover {
+            color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .delete-btn i {
+            font-size: 0.75rem;
+        }
+
+        /* ---------- FOOTER ---------- */
+        .hub-footer {
+            margin-top: 2.8rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            border-top: 1px solid #eaeef2;
+            padding-top: 1.8rem;
+            letter-spacing: 0.2px;
+        }
+
+        .hub-footer a {
+            color: #1a1a2e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .hub-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ---------- MODAL (minimal) ---------- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 1.5rem;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 18px;
+            max-width: 520px;
+            width: 100%;
+            padding: 1.8rem 2rem 2rem;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-card h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 0.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.3px;
+        }
+
+        .modal-card h2 i {
+            color: #1a1a2e;
+            opacity: 0.6;
+            font-size: 1.2rem;
+        }
+
+        .modal-card .modal-sub {
+            color: #6b7280;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .modal-card label {
+            display: block;
+            font-weight: 500;
+            color: #1a1a2e;
+            margin-bottom: 0.15rem;
+            font-size: 0.8rem;
+        }
+
+        .modal-card input,
+        .modal-card select {
+            width: 100%;
+            padding: 0.5rem 0.7rem;
+            border: 1px solid #e2e6ea;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            transition: border 0.2s;
+            background: #fafbfc;
+            font-family: 'Inter', sans-serif;
+            color: #1a1a2e;
+        }
+
+        .modal-card input:focus,
+        .modal-card select:focus {
+            outline: none;
+            border-color: #1a1a2e;
+            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.06);
+        }
+
+        .modal-card .form-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-card .form-row>* {
+            flex: 1 1 45%;
+        }
+
+        .modal-card .modal-actions {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: flex-end;
+            margin-top: 0.3rem;
+        }
+
+        .modal-card .modal-actions button {
+            padding: 0.5rem 1.4rem;
+            border-radius: 40px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .modal-card .modal-actions .btn-primary {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .modal-card .modal-actions .btn-primary:hover {
+            background: #2d2d4a;
+        }
+
+        .modal-card .modal-actions .btn-secondary {
+            background: #f1f3f5;
+            color: #1a1a2e;
+        }
+
+        .modal-card .modal-actions .btn-secondary:hover {
+            background: #e5e8eb;
+        }
+
+        .modal-card .helper-text {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: -0.4rem;
+            margin-bottom: 0.6rem;
+        }
+
+        /* ---------- EMPTY STATE (minimal) ---------- */
+        .empty-state {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            color: #9ca3af;
+            background: #fafbfc;
+            border-radius: 14px;
+            border: 1px dashed #d0d5db;
+        }
+
+        .empty-state i {
+            font-size: 2.8rem;
+            color: #d0d5db;
+            margin-bottom: 0.8rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            max-width: 340px;
+            margin: 0 auto 1.2rem;
+        }
+
+        .empty-state .add-app-btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 1.6rem;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 700px) {
+            body {
+                padding: 1.5rem 1rem;
+            }
+
+            .main-site-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1.5rem;
+            }
+
+            .main-site-text .icon-circle {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+
+            .main-site-text h2 {
+                font-size: 1.05rem;
+            }
+
+            .main-site-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .app-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.9rem;
+            }
+
+            .modal-card {
+                padding: 1.5rem;
+            }
+
+            .hub-header .logo {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hub-header .logo {
+                font-size: 1.3rem;
+            }
+
+            .section-title {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .add-app-btn {
+                justify-content: center;
+            }
+
+            .modal-card .form-row {
+                flex-direction: column;
+            }
+
+            .app-card .new-badge {
+                font-size: 0.5rem;
+                padding: 0.1rem 0.5rem;
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        /* ---------- UTILITY ---------- */
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Roar Rater</h1>
-        <p>100% On-Device AI Architecture</p>
-        
-        <button id="record-btn">🎤</button>
-        
-        <div class="progress-container" id="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        
-        <div id="status">Tap mic to load AI and record</div>
+    <div class="hub-container">
 
-        <div class="results" id="results-card">
-            <div class="score-box">
-                <div style="font-size: 0.9rem; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Final Roar Score</div>
-                <div class="score-display" id="roar-score">0</div>
-                <div class="bonus-text" id="bonus-text">+0 Character Bonus</div>
+        <!-- ===== HEADER ===== -->
+        <header class="hub-header">
+            <div class="logo">
+                <i class="fas fa-rocket"></i> LaunchPad
             </div>
-            
-            <div><span class="bike-badge" id="bike-class">Analyzing...</span></div>
-            <div class="trash-talk" id="trash-talk-text"></div>
+            <p class="subtitle">
+                <i class="fas fa-calendar-plus"></i> Newly launched apps highlighted · all traffic routes through the main site
+            </p>
+        </header>
+
+        <!-- ===== MAIN WEBSITE SPOTLIGHT ===== -->
+        <div class="main-site-card">
+            <div class="main-site-text">
+                <div class="icon-circle">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div>
+                    <h2>Main Website</h2>
+                    <p>Central hub — every app launch routes through here</p>
+                </div>
+            </div>
+            <a href="#" class="main-site-btn" id="mainSiteBtn">
+                <i class="fas fa-arrow-right"></i> Visit Main Site
+            </a>
+        </div>
+
+        <!-- ===== APP LIST ===== -->
+        <div class="section-title">
+            <div class="left">
+                <i class="fas fa-th-large"></i>
+                Applications
+                <span>(newest first)</span>
+            </div>
+            <button class="add-app-btn" id="addAppBtn">
+                <i class="fas fa-plus"></i> Add App
+            </button>
+        </div>
+
+        <div class="app-grid" id="appGrid">
+            <!-- cards injected by JS -->
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="hub-footer">
+            <p>
+                <i class="fas fa-route" style="margin-right: 0.3rem; opacity: 0.6;"></i>
+                All traffic routed through
+                <a href="#" id="footerMainLink">main website</a>
+                · LaunchPad
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- ===== MODAL ===== -->
+    <div id="addAppModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2><i class="fas fa-plus"></i> Add New App</h2>
+            <p class="modal-sub">Enter the details below to add an application.</p>
+
+            <form id="addAppForm">
+                <label for="appName">App Name *</label>
+                <input type="text" id="appName" placeholder="e.g. Analytics" required />
+
+                <label for="appDesc">Description</label>
+                <input type="text" id="appDesc" placeholder="Brief description" />
+
+                <div class="form-row">
+                    <div>
+                        <label for="appIcon">Icon (FontAwesome)</label>
+                        <input type="text" id="appIcon" placeholder="fa-chart-line" value="fa-cube" />
+                        <div class="helper-text">e.g. fa-users, fa-cog</div>
+                    </div>
+                    <div>
+                        <label for="appStatus">Status</label>
+                        <select id="appStatus">
+                            <option value="live">Live</option>
+                            <option value="pending">Pending</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label for="appRoute">Route (link) *</label>
+                <input type="text" id="appRoute" placeholder="/analytics" required />
+
+                <label for="appImage">Image URL (optional)</label>
+                <input type="url" id="appImage" placeholder="https://example.com/logo.png" />
+                <div class="helper-text">If provided, this image replaces the icon.</div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
+                    <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Add</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        // REPLACE this URL with your own Teachable Machine Audio model link once you train it!
-        // Example: "https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/"
-        const URL = "https://teachablemachine.withgoogle.com/models/placeholder/"; 
-        
-        const RECORD_DURATION_MS = 5000; // 5 seconds
-        
-        // Trash Talk Engine (Tamil-English)
-        const trashTalkTemplates = {
-            low: [
-                "Enna ba, mixer grinder sound kekuthu! 😂",
-                "TVS 50 ah idhu? Needs more throat! 🛵",
-                "Sathame illa... Cycle otlama ba? 🚲"
-            ],
-            medium: [
-                "Not bad, aana innum konjam raw power thevai! 🏍️",
-                "Decent ah irukku, but where is the bass man? 🤔",
-                "KTM Duke vibes, pulling out okay! 🔥"
-            ],
-            high: [
-                "Verithanam! Pure muscle! 💥",
-                "Therikkavidalama! That's a beast roaring! 🦁",
-                "Kaantha kural! Royal Enfield thozha! 👑"
-            ]
-        };
+        (function() {
+            'use strict';
 
-        // UI Elements
-        const recordBtn = document.getElementById('record-btn');
-        const statusText = document.getElementById('status');
-        const resultsCard = document.getElementById('results-card');
-        const roarScoreEl = document.getElementById('roar-score');
-        const bikeClassEl = document.getElementById('bike-class');
-        const trashTalkEl = document.getElementById('trash-talk-text');
-        const bonusTextEl = document.getElementById('bonus-text');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
+            // ---------- PWA: GENERATE MANIFEST ----------
+            function generateManifest() {
+                const sizes = [192, 512];
+                const icons = sizes.map(size => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
 
-        // State Variables
-        let isRecording = false;
-        let recognizer;
-        let audioContext;
-        let analyser;
-        let microphone;
-        let maxVolume = 0;
-        let detectedClass = "Unknown";
-        let maxConfidence = 0;
-        let progressInterval;
+                    const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size);
+                    gradient.addColorStop(0, '#2d2d4a');
+                    gradient.addColorStop(1, '#1a1a2e');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, size, size);
 
-        // --- 2. TFJS MODEL LOADING ---
-        async function createModel() {
-            const checkpointURL = URL + "model.json"; // model topology
-            const metadataURL = URL + "metadata.json"; // model metadata
+                    ctx.font = `${size * 0.55}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'white';
+                    ctx.fillText('🚀', size / 2, size / 2 + size * 0.05);
 
-            try {
-                const recognizer = speechCommands.create(
-                    "BROWSER_FFT", // Fourier transform type
-                    undefined,     // speech commands vocabulary feature
-                    checkpointURL,
-                    metadataURL
-                );
-                // check that model and metadata are loaded
-                await recognizer.ensureModelLoaded();
-                return recognizer;
-            } catch (e) {
-                console.warn("Real TFJS model not found. Falling back to Mock Engine for UI testing.");
-                return null; // Return null to trigger the graceful fallback demo
+                    return {
+                        src: canvas.toDataURL('image/png'),
+                        sizes: `${size}x${size}`,
+                        type: 'image/png',
+                        purpose: 'any maskable'
+                    };
+                });
+
+                const manifest = {
+                    name: 'LaunchPad',
+                    short_name: 'LaunchPad',
+                    description: 'App Command Centre',
+                    start_url: '.',
+                    display: 'standalone',
+                    background_color: '#f6f8fa',
+                    theme_color: '#1a1a2e',
+                    icons: icons
+                };
+
+                const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                document.getElementById('manifestLink').href = url;
             }
-        }
+            generateManifest();
 
-        // --- 3. CORE LOGIC ---
-        recordBtn.addEventListener('click', async () => {
-            if (isRecording) return;
-            
-            resultsCard.style.display = 'none';
-            statusText.innerText = 'Loading TFJS Model into memory...';
-            
-            // Lazy load model on first click
-            if (!recognizer && recognizer !== null) {
-                recognizer = await createModel();
+            // ---------- STORAGE ----------
+            const STORAGE_KEY = 'launchpad_apps';
+
+            function loadApps() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        return parsed.map(app => ({ ...app, image: app.image || '' }));
+                    } catch (e) { console.warn('Failed to parse stored apps.'); }
+                }
+                return [];
             }
 
-            startPipeline();
-        });
+            function saveApps(apps) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+            }
 
-        async function startPipeline() {
-            try {
-                // Request raw microphone access for decibel calculation
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                setupDecibelTracker(stream);
+            // ---------- STATE ----------
+            let apps = loadApps();
+            let nextId = apps.reduce((max, a) => Math.max(max, a.id), 0) + 1;
 
-                isRecording = true;
-                recordBtn.classList.add('recording');
-                progressContainer.style.display = 'block';
-                progressBar.style.width = '0%';
-                statusText.innerText = 'Listening... Rev the engine!';
+            // ---------- HELPERS ----------
+            function formatDate(dateString) {
+                const d = new Date(dateString + 'T00:00:00');
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
 
-                // Start Progress Bar
-                let elapsed = 0;
-                progressInterval = setInterval(() => {
-                    elapsed += 100;
-                    progressBar.style.width = (elapsed / RECORD_DURATION_MS) * 100 + '%';
-                }, 100);
+            function daysBetween(date1, date2) {
+                const oneDay = 24 * 60 * 60 * 1000;
+                const d1 = new Date(date1 + 'T00:00:00');
+                const d2 = new Date(date2 + 'T00:00:00');
+                return Math.round(Math.abs((d2 - d1) / oneDay));
+            }
 
-                // If real TFJS model loaded, start classifying in real time
-                if (recognizer) {
-                    const classLabels = recognizer.wordLabels(); 
-                    recognizer.listen(result => {
-                        // Find highest confidence class during this window
-                        let scores = result.scores;
-                        let highestIndex = scores.indexOf(Math.max(...scores));
-                        
-                        if (scores[highestIndex] > maxConfidence) {
-                            maxConfidence = scores[highestIndex];
-                            detectedClass = classLabels[highestIndex];
-                        }
-                    }, {
-                        includeSpectrogram: false,
-                        probabilityThreshold: 0.75,
-                        invokeCallbackOnNoiseAndUnknown: true,
-                        overlapFactor: 0.50
-                    });
+            function todayStr() {
+                const d = new Date();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${d.getFullYear()}-${month}-${day}`;
+            }
+
+            // ---------- RENDER ----------
+            const grid = document.getElementById('appGrid');
+
+            function renderApps() {
+                const sorted = [...apps].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+                const newestDate = sorted.length > 0 ? sorted[0].dateAdded : null;
+
+                if (sorted.length === 0) {
+                    grid.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No apps yet</h3>
+                                <p>Add your first application to get started.</p>
+                                <button class="add-app-btn" id="emptyStateAddBtn">
+                                    <i class="fas fa-plus"></i> Add Your First App
+                                </button>
+                            </div>
+                        `;
+                    const emptyBtn = document.getElementById('emptyStateAddBtn');
+                    if (emptyBtn) {
+                        emptyBtn.addEventListener('click', function() {
+                            document.getElementById('addAppBtn').click();
+                        });
+                    }
+                    return;
                 }
 
-                // Stop after 5 seconds
-                setTimeout(() => {
-                    stopPipeline(stream);
-                }, RECORD_DURATION_MS);
+                grid.innerHTML = sorted.map(app => {
+                    const statusClass = app.status === 'live' ? '' :
+                        app.status === 'pending' ? 'pending' : 'maintenance';
+                    const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
 
-            } catch (err) {
-                console.error(err);
-                statusText.innerText = "Error: Microphone permission denied.";
-            }
-        }
+                    let isNew = false;
+                    if (newestDate) {
+                        const diff = daysBetween(app.dateAdded, newestDate);
+                        if (diff <= 7) isNew = true;
+                    }
 
-        function setupDecibelTracker(stream) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            microphone = audioContext.createMediaStreamSource(stream);
-            microphone.connect(analyser);
-            analyser.fftSize = 256;
-            
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            maxVolume = 0;
+                    const dateFormatted = formatDate(app.dateAdded);
 
-            function track() {
-                if (!isRecording) return;
-                analyser.getByteFrequencyData(dataArray);
-                let sum = 0;
-                for (let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
-                let avg = sum / bufferLength;
-                if (avg > maxVolume) maxVolume = avg; // Track peak volume
-                requestAnimationFrame(track);
-            }
-            track();
-        }
+                    let iconHtml = '';
+                    if (app.image && app.image.trim() !== '') {
+                        iconHtml = `<img src="${app.image}" alt="${app.name}" loading="lazy" />`;
+                    } else {
+                        iconHtml = `<i class="fas ${app.icon || 'fa-cube'}"></i>`;
+                    }
 
-        function stopPipeline(stream) {
-            isRecording = false;
-            clearInterval(progressInterval);
-            recordBtn.classList.remove('recording');
-            progressContainer.style.display = 'none';
-            statusText.innerText = 'Processing completely on-device...';
-
-            // Clean up Audio Context
-            stream.getTracks().forEach(track => track.stop());
-            if (audioContext && audioContext.state !== 'closed') {
-                audioContext.close();
-            }
-            if (recognizer) {
-                recognizer.stopListening();
+                    return `
+                            <div class="app-card" data-app-id="${app.id}">
+                                ${isNew ? `<div class="new-badge"><i class="fas fa-bolt"></i> New</div>` : ''}
+                                <div class="app-icon">${iconHtml}</div>
+                                <h3>${app.name}</h3>
+                                <p class="app-desc">${app.description || 'No description'}</p>
+                                <div class="app-date">
+                                    <i class="far fa-calendar-alt"></i> ${dateFormatted}
+                                </div>
+                                <div class="app-meta">
+                                    <span class="app-status ${statusClass}">
+                                        <i class="fas fa-circle" style="font-size: 0.3rem; margin-right: 4px; vertical-align: middle;"></i>
+                                        ${statusLabel}
+                                    </span>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <a href="#" class="app-link" data-route="${app.route}">
+                                            Launch <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                        <button class="delete-btn" data-id="${app.id}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                }).join('');
             }
 
-            calculateAndShowResults();
-        }
-
-        function calculateAndShowResults() {
-            // 1. Calculate Base Decibel Score (Mapping peak volume 0-255 to 0-85)
-            let baseScore = Math.min(85, Math.round((maxVolume / 255) * 85 * 1.5)); 
-            if (baseScore < 10) baseScore = Math.floor(Math.random() * 20) + 10; 
-
-            // 2. Handle AI Bike Classification & Character Bonus
-            let characterBonus = 0;
-
-            // If the user hasn't put in their real Teachable Machine URL yet, Mock the AI
-            if (!recognizer) {
-                if (baseScore > 75) { detectedClass = "Royal Enfield Classic 350"; maxConfidence = 0.92; }
-                else if (baseScore > 50) { detectedClass = "KTM Duke 390"; maxConfidence = 0.85; }
-                else { detectedClass = "TVS XL Super"; maxConfidence = 0.78; }
+            // ---------- DELETE ----------
+            function deleteApp(appId) {
+                if (!confirm('Delete this app?')) return;
+                apps = apps.filter(app => app.id !== appId);
+                saveApps(apps);
+                renderApps();
             }
 
-            // Assign Bonus based on AI Output (The "Character" Bonus from your architecture)
-            if (detectedClass.includes("Royal Enfield")) characterBonus = 15;
-            else if (detectedClass.includes("KTM")) characterBonus = 10;
-            else if (detectedClass.includes("Yamaha")) characterBonus = 8;
-            else characterBonus = 2; // Commuter bikes get low bonus
+            // ---------- ROUTING ----------
+            function routeTraffic(destination) {
+                const mainUrl = window.location.origin + window.location.pathname;
+                const fullPath = mainUrl + '?app=' + encodeURIComponent(destination);
+                showRoutingMessage(destination, fullPath);
+                // window.location.href = `https://your-main-website.com${destination}`;
+            }
 
-            // 3. Final Roar Score Calculation
-            let finalScore = Math.min(100, baseScore + characterBonus);
+            function showRoutingMessage(destination, fullUrl) {
+                const existing = document.querySelector('.routing-overlay');
+                if (existing) existing.remove();
 
-            // 4. Update UI
-            roarScoreEl.innerText = finalScore;
-            bonusTextEl.innerText = `+${characterBonus} Character Bonus (${detectedClass})`;
-            bikeClassEl.innerText = `${detectedClass} (Confidence: ${Math.round(maxConfidence * 100)}%)`;
-            
-            // 5. Fire Trash Talk Engine
-            let category = 'low';
-            if (finalScore > 75) category = 'high';
-            else if (finalScore > 40) category = 'medium';
+                const overlay = document.createElement('div');
+                overlay.className = 'routing-overlay';
+                overlay.style.cssText = `
+                        position: fixed;
+                        inset: 0;
+                        background: rgba(26, 26, 46, 0.6);
+                        backdrop-filter: blur(4px);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                        padding: 2rem;
+                        animation: fadeIn 0.2s ease;
+                    `;
 
-            const phrases = trashTalkTemplates[category];
-            trashTalkEl.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+                const card = document.createElement('div');
+                card.style.cssText = `
+                        background: white;
+                        border-radius: 18px;
+                        max-width: 480px;
+                        width: 100%;
+                        padding: 2rem 2rem 1.8rem;
+                        text-align: center;
+                        box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+                    `;
 
-            resultsCard.style.display = 'block';
-            statusText.innerText = 'Tap mic to test another bike!';
-            
-            // Reset state for next run
-            maxConfidence = 0;
-            detectedClass = "Unknown";
-        }
+                card.innerHTML = `
+                        <div style="font-size: 2.4rem; margin-bottom: 0.6rem;">🚀</div>
+                        <h2 style="font-size: 1.3rem; font-weight: 600; color: #1a1a2e; margin-bottom: 0.3rem; letter-spacing: -0.3px;">
+                            Routing to Main Site
+                        </h2>
+                        <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 1rem;">
+                            Destination: <code style="background: #f1f3f5; padding: 0.1rem 0.5rem; border-radius: 6px; font-size: 0.85rem;">${destination}</code>
+                        </p>
+                        <div style="background: #f6f8fa; border-radius: 10px; padding: 0.6rem 0.8rem; margin-bottom: 1.4rem; word-break: break-all; font-size: 0.75rem; color: #6b7280; border: 1px solid #eaeef2;">
+                            ${fullUrl}
+                        </div>
+                        <button id="closeRoutingOverlay" style="
+                            background: #1a1a2e;
+                            color: white;
+                            border: none;
+                            padding: 0.5rem 1.6rem;
+                            border-radius: 40px;
+                            font-weight: 500;
+                            font-size: 0.9rem;
+                            cursor: pointer;
+                            transition: background 0.2s;
+                            font-family: 'Inter', sans-serif;
+                        ">
+                            Got it
+                        </button>
+                        <p style="margin-top: 0.8rem; font-size: 0.7rem; color: #9ca3af;">
+                            <i class="fas fa-info-circle"></i> In production, you'd be redirected.
+                        </p>
+                    `;
+
+                overlay.appendChild(card);
+                document.body.appendChild(overlay);
+
+                document.getElementById('closeRoutingOverlay').addEventListener('click', function() {
+                    overlay.remove();
+                });
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) overlay.remove();
+                });
+                document.addEventListener('keydown', function esc(e) {
+                    if (e.key === 'Escape') {
+                        overlay.remove();
+                        document.removeEventListener('keydown', esc);
+                    }
+                });
+            }
+
+            // ---------- MODAL ----------
+            const modal = document.getElementById('addAppModal');
+            const addBtn = document.getElementById('addAppBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            const form = document.getElementById('addAppForm');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                form.reset();
+                document.getElementById('appIcon').value = 'fa-cube';
+                document.getElementById('appStatus').value = 'live';
+                setTimeout(() => document.getElementById('appName').focus(), 100);
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            addBtn.addEventListener('click', openModal);
+            cancelBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+            });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('appName').value.trim();
+                const description = document.getElementById('appDesc').value.trim();
+                const icon = document.getElementById('appIcon').value.trim() || 'fa-cube';
+                const status = document.getElementById('appStatus').value;
+                const route = document.getElementById('appRoute').value.trim();
+                const image = document.getElementById('appImage').value.trim();
+
+                if (!name || !route) {
+                    alert('App Name and Route are required.');
+                    return;
+                }
+
+                const newApp = {
+                    id: nextId++,
+                    name,
+                    description: description || '',
+                    icon,
+                    status,
+                    route,
+                    dateAdded: todayStr(),
+                    image: image || ''
+                };
+
+                apps.push(newApp);
+                saveApps(apps);
+                renderApps();
+                closeModal();
+                form.reset();
+            });
+
+            // ---------- EVENT DELEGATION ----------
+            document.getElementById('mainSiteBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                routeTraffic('/');
+            });
+
+            document.getElementById('footerMainLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                routeTraffic('/');
+            });
+
+            document.getElementById('appGrid').addEventListener('click', function(e) {
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    e.preventDefault();
+                    const appId = parseInt(deleteBtn.getAttribute('data-id'), 10);
+                    if (!isNaN(appId)) deleteApp(appId);
+                    return;
+                }
+
+                const link = e.target.closest('.app-link');
+                if (link) {
+                    e.preventDefault();
+                    const route = link.getAttribute('data-route');
+                    if (route) routeTraffic(route);
+                }
+            });
+
+            // ---------- SERVICE WORKER ----------
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(reg => console.log('SW registered:', reg.scope))
+                        .catch(err => console.log('SW registration failed:', err));
+                });
+            }
+
+            // ---------- INIT ----------
+            renderApps();
+            console.log('🚀 LaunchPad · minimal UI ready.');
+        })();
     </script>
+
 </body>
 </html>
