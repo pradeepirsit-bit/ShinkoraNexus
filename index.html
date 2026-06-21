@@ -21,6 +21,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 
     <style>
+        /* ---------- RESET & BASE ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -731,11 +732,11 @@
                     <i class="fas fa-rocket"></i> LaunchPad
                 </div>
                 <p class="subtitle">
-                    <i class="fas fa-calendar-plus"></i> Newly launched apps highlighted · all traffic routes through the main site
+                    <i class="fas fa-cloud"></i> Cloud‑synced via Firestore · all traffic routes through the main site
                 </p>
             </div>
             <div class="header-actions">
-                <button id="exportBtn" title="Export all apps as JSON">
+                <button id="exportBtn" title="Export all apps as JSON (local backup)">
                     <i class="fas fa-download"></i> Export
                 </button>
                 <button id="importBtn" title="Import apps from JSON file">
@@ -830,7 +831,57 @@
         </div>
     </div>
 
-    <script>
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // ============================================================
+        // 🔥 FIREBASE CONFIG – Your ShinkoraNexus project
+        // ============================================================
+        import { initializeApp } from "firebase/app";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            deleteDoc,
+            doc,
+            query,
+            orderBy,
+            onSnapshot,
+            getDocs,
+            writeBatch
+        } from "firebase/firestore";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBm1-UpN5l8-q78Ys8KGhZ6FVLH1St22-I",
+            authDomain: "shinkoranexus.firebaseapp.com",
+            projectId: "shinkoranexus",
+            storageBucket: "shinkoranexus.firebasestorage.app",
+            messagingSenderId: "610066808729",
+            appId: "1:610066808729:web:8d5a669f9631c5de205d08"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // (Optional) Enable offline persistence
+        try {
+            // Note: enablePersistence is not available in modular v9+ without extra imports
+            // We'll keep it simple and rely on Firestore's built-in caching
+            console.log('🔥 Firestore connected');
+        } catch (err) {
+            console.warn('Firestore init:', err);
+        }
+
+        // ============================================================
+
         (function() {
             'use strict';
 
@@ -840,16 +891,13 @@
             function showToast(message, type = 'info', duration = 3000) {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
-
                 const icons = {
                     success: 'fa-check-circle',
                     error: 'fa-exclamation-circle',
                     info: 'fa-info-circle'
                 };
                 toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${message}`;
-
                 toastContainer.appendChild(toast);
-
                 setTimeout(() => {
                     toast.style.animation = 'fadeOut 0.3s ease forwards';
                     setTimeout(() => toast.remove(), 300);
@@ -897,31 +945,9 @@
             }
             generateManifest();
 
-            // ---------- STORAGE ----------
-            const STORAGE_KEY = 'launchpad_apps';
-
-            function loadApps() {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    try {
-                        const parsed = JSON.parse(stored);
-                        if (!Array.isArray(parsed)) return [];
-                        return parsed.map(app => ({ ...app, image: app.image || '' }));
-                    } catch (e) {
-                        console.warn('Failed to parse stored apps.');
-                        return [];
-                    }
-                }
-                return [];
-            }
-
-            function saveApps(apps) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
-            }
-
             // ---------- STATE ----------
-            let apps = loadApps();
-            let nextId = apps.reduce((max, a) => Math.max(max, a.id), 0) + 1;
+            let apps = [];
+            let nextId = 1;
 
             // ---------- HELPERS ----------
             function formatDate(dateString) {
@@ -1012,16 +1038,78 @@
                 }).join('');
             }
 
-            // ---------- DELETE ----------
-            function deleteApp(appId) {
-                if (!confirm('Delete this app?')) return;
-                apps = apps.filter(app => app.id !== appId);
-                saveApps(apps);
-                renderApps();
-                showToast('App deleted successfully.', 'success');
+            // ---------- FIRESTORE CRUD ----------
+            const COLLECTION_NAME = 'apps';
+
+            // Store document ID mapping (id -> docId)
+            const docMap = new Map();
+
+            // Load apps from Firestore in real-time
+            function subscribeToApps() {
+                const q = query(collection(db, COLLECTION_NAME), orderBy('dateAdded', 'desc'));
+
+                onSnapshot(q, (snapshot) => {
+                    apps = [];
+                    docMap.clear();
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const app = {
+                            id: data.id,
+                            name: data.name,
+                            description: data.description || '',
+                            icon: data.icon || 'fa-cube',
+                            status: data.status || 'live',
+                            route: data.route,
+                            dateAdded: data.dateAdded,
+                            image: data.image || ''
+                        };
+                        apps.push(app);
+                        docMap.set(data.id, doc.id);
+                    });
+                    // Update nextId
+                    if (apps.length > 0) {
+                        nextId = Math.max(...apps.map(a => a.id)) + 1;
+                    } else {
+                        nextId = 1;
+                    }
+                    renderApps();
+                }, (error) => {
+                    showToast('Error loading apps: ' + error.message, 'error');
+                });
             }
 
-            // ---------- EXPORT ----------
+            // Add a new app
+            async function addAppToFirestore(appData) {
+                try {
+                    await addDoc(collection(db, COLLECTION_NAME), appData);
+                    showToast(`"${appData.name}" added successfully.`, 'success');
+                } catch (err) {
+                    showToast('Failed to add app: ' + err.message, 'error');
+                }
+            }
+
+            // Delete an app
+            async function deleteAppFromFirestore(appId) {
+                try {
+                    const docId = docMap.get(appId);
+                    if (!docId) {
+                        showToast('App not found.', 'error');
+                        return;
+                    }
+                    await deleteDoc(doc(db, COLLECTION_NAME, docId));
+                    showToast('App deleted successfully.', 'success');
+                } catch (err) {
+                    showToast('Failed to delete app: ' + err.message, 'error');
+                }
+            }
+
+            // ---------- DELETE (UI wrapper) ----------
+            function deleteApp(appId) {
+                if (!confirm('Delete this app?')) return;
+                deleteAppFromFirestore(appId);
+            }
+
+            // ---------- EXPORT (from current apps array) ----------
             function exportApps() {
                 if (apps.length === 0) {
                     showToast('No apps to export. Add some first!', 'error');
@@ -1040,10 +1128,10 @@
                 showToast(`Exported ${apps.length} apps successfully.`, 'success');
             }
 
-            // ---------- IMPORT ----------
-            function importApps(file) {
+            // ---------- IMPORT (replace entire Firestore collection) ----------
+            async function importApps(file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const imported = JSON.parse(e.target.result);
                         if (!Array.isArray(imported)) {
@@ -1061,12 +1149,37 @@
                         if (!valid) {
                             throw new Error('Some apps are missing required fields (id, name, route).');
                         }
-                        // Replace current apps with imported ones
-                        apps = imported.map(app => ({ ...app, image: app.image || '' }));
-                        nextId = apps.reduce((max, a) => Math.max(max, a.id), 0) + 1;
-                        saveApps(apps);
-                        renderApps();
-                        showToast(`Successfully imported ${apps.length} apps.`, 'success');
+
+                        if (!confirm(`This will replace all existing apps with ${imported.length} apps from the file. Continue?`)) {
+                            return;
+                        }
+
+                        // Clear existing collection
+                        const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+                        const batch = writeBatch(db);
+                        snapshot.forEach((doc) => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+
+                        // Add imported apps
+                        const batchAdd = writeBatch(db);
+                        imported.forEach(app => {
+                            const docRef = doc(collection(db, COLLECTION_NAME));
+                            batchAdd.set(docRef, {
+                                id: app.id,
+                                name: app.name,
+                                description: app.description || '',
+                                icon: app.icon || 'fa-cube',
+                                status: app.status || 'live',
+                                route: app.route,
+                                dateAdded: app.dateAdded || todayStr(),
+                                image: app.image || ''
+                            });
+                        });
+                        await batchAdd.commit();
+
+                        showToast(`Successfully imported ${imported.length} apps.`, 'success');
                     } catch (err) {
                         showToast('Import failed: ' + err.message, 'error');
                     }
@@ -1186,18 +1299,14 @@
                     dateAdded: todayStr(),
                     image: image || ''
                 };
-                apps.push(newApp);
-                saveApps(apps);
-                renderApps();
+                addAppToFirestore(newApp);
                 closeModal();
                 form.reset();
-                showToast(`"${name}" added successfully.`, 'success');
             });
 
             // ---------- IMPORT / EXPORT EVENTS ----------
             document.getElementById('exportBtn').addEventListener('click', exportApps);
 
-            // Import: trigger file input
             document.getElementById('importBtn').addEventListener('click', function() {
                 document.getElementById('importInput').click();
             });
@@ -1206,7 +1315,6 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 importApps(file);
-                // Reset so the same file can be re-imported
                 e.target.value = '';
             });
 
@@ -1245,9 +1353,11 @@
                 });
             }
 
-            // ---------- INIT ----------
-            renderApps();
-            console.log('🚀 LaunchPad ready.');
+            // ---------- START ----------
+            // Listen to Firestore
+            subscribeToApps();
+
+            console.log('🚀 LaunchPad with Firestore (ShinkoraNexus) ready.');
         })();
     </script>
 
