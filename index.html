@@ -21,7 +21,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 
     <style>
-        /* ---------- RESET & BASE ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -39,7 +38,6 @@
             color: #1a1a2e;
         }
 
-        /* ---------- MAIN CONTAINER ---------- */
         .hub-container {
             max-width: 1100px;
             width: 100%;
@@ -119,16 +117,68 @@
             border-color: #1a1a2e;
         }
 
-        .header-actions .import-btn {
-            position: relative;
-            overflow: hidden;
+        /* ---------- TOAST ---------- */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            max-width: 380px;
         }
 
-        .header-actions .import-btn input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
+        .toast {
+            background: #1a1a2e;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .toast.success {
+            background: #0d7a3e;
+        }
+        .toast.error {
+            background: #b91c1c;
+        }
+        .toast.info {
+            background: #1a1a2e;
+        }
+
+        .toast i {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
         }
 
         /* ---------- MAIN WEBSITE SPOTLIGHT ---------- */
@@ -647,6 +697,11 @@
                 font-size: 0.7rem;
                 padding: 0.25rem 0.8rem;
             }
+            .toast-container {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
         }
 
         .hidden {
@@ -683,10 +738,10 @@
                 <button id="exportBtn" title="Export all apps as JSON">
                     <i class="fas fa-download"></i> Export
                 </button>
-                <button class="import-btn" title="Import apps from JSON file">
+                <button id="importBtn" title="Import apps from JSON file">
                     <i class="fas fa-upload"></i> Import
-                    <input type="file" id="importInput" accept=".json" />
                 </button>
+                <input type="file" id="importInput" accept=".json" style="display:none;" />
             </div>
         </header>
 
@@ -734,6 +789,9 @@
 
     </div>
 
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- ===== MODAL ===== -->
     <div id="addAppModal" class="modal-overlay hidden">
         <div class="modal-card">
@@ -775,6 +833,28 @@
     <script>
         (function() {
             'use strict';
+
+            // ---------- TOAST SYSTEM ----------
+            const toastContainer = document.getElementById('toastContainer');
+
+            function showToast(message, type = 'info', duration = 3000) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    info: 'fa-info-circle'
+                };
+                toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${message}`;
+
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
 
             // ---------- PWA MANIFEST ----------
             function generateManifest() {
@@ -825,8 +905,12 @@
                 if (stored) {
                     try {
                         const parsed = JSON.parse(stored);
+                        if (!Array.isArray(parsed)) return [];
                         return parsed.map(app => ({ ...app, image: app.image || '' }));
-                    } catch (e) { console.warn('Failed to parse stored apps.'); }
+                    } catch (e) {
+                        console.warn('Failed to parse stored apps.');
+                        return [];
+                    }
                 }
                 return [];
             }
@@ -934,12 +1018,13 @@
                 apps = apps.filter(app => app.id !== appId);
                 saveApps(apps);
                 renderApps();
+                showToast('App deleted successfully.', 'success');
             }
 
             // ---------- EXPORT ----------
             function exportApps() {
                 if (apps.length === 0) {
-                    alert('No apps to export.');
+                    showToast('No apps to export. Add some first!', 'error');
                     return;
                 }
                 const dataStr = JSON.stringify(apps, null, 2);
@@ -952,6 +1037,7 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                showToast(`Exported ${apps.length} apps successfully.`, 'success');
             }
 
             // ---------- IMPORT ----------
@@ -963,7 +1049,9 @@
                         if (!Array.isArray(imported)) {
                             throw new Error('Invalid format: expected an array.');
                         }
-                        // Validate basic structure
+                        if (imported.length === 0) {
+                            throw new Error('The file contains no apps.');
+                        }
                         const valid = imported.every(app =>
                             typeof app === 'object' &&
                             app.id !== undefined &&
@@ -975,14 +1063,16 @@
                         }
                         // Replace current apps with imported ones
                         apps = imported.map(app => ({ ...app, image: app.image || '' }));
-                        // Update nextId
                         nextId = apps.reduce((max, a) => Math.max(max, a.id), 0) + 1;
                         saveApps(apps);
                         renderApps();
-                        alert(`Successfully imported ${apps.length} apps.`);
+                        showToast(`Successfully imported ${apps.length} apps.`, 'success');
                     } catch (err) {
-                        alert('Failed to import file: ' + err.message);
+                        showToast('Import failed: ' + err.message, 'error');
                     }
+                };
+                reader.onerror = function() {
+                    showToast('Failed to read file.', 'error');
                 };
                 reader.readAsText(file);
             }
@@ -992,7 +1082,6 @@
                 const mainUrl = window.location.origin + window.location.pathname;
                 const fullPath = mainUrl + '?app=' + encodeURIComponent(destination);
                 showRoutingMessage(destination, fullPath);
-                // window.location.href = `https://your-main-website.com${destination}`;
             }
 
             function showRoutingMessage(destination, fullUrl) {
@@ -1084,7 +1173,7 @@
                 const route = document.getElementById('appRoute').value.trim();
                 const image = document.getElementById('appImage').value.trim();
                 if (!name || !route) {
-                    alert('App Name and Route are required.');
+                    showToast('App Name and Route are required.', 'error');
                     return;
                 }
                 const newApp = {
@@ -1102,6 +1191,23 @@
                 renderApps();
                 closeModal();
                 form.reset();
+                showToast(`"${name}" added successfully.`, 'success');
+            });
+
+            // ---------- IMPORT / EXPORT EVENTS ----------
+            document.getElementById('exportBtn').addEventListener('click', exportApps);
+
+            // Import: trigger file input
+            document.getElementById('importBtn').addEventListener('click', function() {
+                document.getElementById('importInput').click();
+            });
+
+            document.getElementById('importInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                importApps(file);
+                // Reset so the same file can be re-imported
+                e.target.value = '';
             });
 
             // ---------- EVENT DELEGATION ----------
@@ -1130,17 +1236,6 @@
                 }
             });
 
-            // ---------- EXPORT / IMPORT ----------
-            document.getElementById('exportBtn').addEventListener('click', exportApps);
-
-            document.getElementById('importInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                importApps(file);
-                // reset input so same file can be re-imported
-                e.target.value = '';
-            });
-
             // ---------- SERVICE WORKER ----------
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
@@ -1152,7 +1247,7 @@
 
             // ---------- INIT ----------
             renderApps();
-            console.log('🚀 LaunchPad · minimal UI with import/export ready.');
+            console.log('🚀 LaunchPad ready.');
         })();
     </script>
 
