@@ -15,7 +15,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- Google Fonts – Inter for minimalism -->
+    <!-- Google Fonts – Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
@@ -44,17 +44,25 @@
             max-width: 1100px;
             width: 100%;
             background: transparent;
-            border-radius: 0;
             padding: 0;
-            transition: all 0.2s ease;
         }
 
         /* ---------- HEADER ---------- */
         .hub-header {
-            text-align: left;
-            padding-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding-bottom: 1.8rem;
             border-bottom: 1px solid #eaeef2;
             margin-bottom: 2.5rem;
+        }
+
+        .hub-header .left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
         }
 
         .hub-header .logo {
@@ -74,14 +82,53 @@
 
         .hub-header .subtitle {
             color: #6b7280;
-            font-size: 0.95rem;
-            margin-top: 0.3rem;
+            font-size: 0.9rem;
             font-weight: 400;
         }
 
         .hub-header .subtitle i {
             color: #1a1a2e;
             margin-right: 0.3rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-actions button {
+            background: transparent;
+            border: 1px solid #d0d5db;
+            padding: 0.35rem 1rem;
+            border-radius: 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .header-actions button:hover {
+            background: #f1f3f5;
+            border-color: #1a1a2e;
+        }
+
+        .header-actions .import-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-actions .import-btn input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
         }
 
         /* ---------- MAIN WEBSITE SPOTLIGHT ---------- */
@@ -96,8 +143,8 @@
             flex-wrap: wrap;
             gap: 1.2rem;
             color: white;
-            transition: box-shadow 0.2s ease;
             box-shadow: 0 4px 20px rgba(26, 26, 46, 0.12);
+            transition: box-shadow 0.2s ease;
         }
 
         .main-site-card:hover {
@@ -157,10 +204,6 @@
             transform: scale(1.01);
         }
 
-        .main-site-btn i {
-            font-size: 0.8rem;
-        }
-
         /* ---------- SECTION TITLE ---------- */
         .section-title {
             display: flex;
@@ -215,10 +258,6 @@
             transform: scale(1.02);
         }
 
-        .add-app-btn i {
-            font-size: 0.8rem;
-        }
-
         /* ---------- APP GRID ---------- */
         .app-grid {
             display: grid;
@@ -226,7 +265,7 @@
             gap: 1.2rem;
         }
 
-        /* ---------- APP CARD (minimal) ---------- */
+        /* ---------- APP CARD ---------- */
         .app-card {
             background: #ffffff;
             border-radius: 14px;
@@ -261,10 +300,6 @@
             align-items: center;
             gap: 0.2rem;
             z-index: 2;
-        }
-
-        .app-card .new-badge i {
-            font-size: 0.4rem;
         }
 
         .app-card .app-icon {
@@ -304,7 +339,6 @@
             line-height: 1.5;
             flex: 1;
             margin: 0.2rem 0 0.5rem 0;
-            font-weight: 400;
         }
 
         .app-card .app-date {
@@ -314,10 +348,6 @@
             align-items: center;
             gap: 0.3rem;
             margin-bottom: 0.6rem;
-        }
-
-        .app-card .app-date i {
-            font-size: 0.6rem;
         }
 
         .app-card .app-meta {
@@ -367,11 +397,6 @@
             gap: 0.5rem;
         }
 
-        .app-card .app-link i {
-            font-size: 0.7rem;
-        }
-
-        /* ---------- DELETE BUTTON (minimal) ---------- */
         .delete-btn {
             background: transparent;
             border: none;
@@ -381,17 +406,11 @@
             transition: all 0.2s;
             padding: 0.1rem 0.3rem;
             border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
         }
 
         .delete-btn:hover {
             color: #ef4444;
             background: #fef2f2;
-        }
-
-        .delete-btn i {
-            font-size: 0.75rem;
         }
 
         /* ---------- FOOTER ---------- */
@@ -402,7 +421,6 @@
             font-size: 0.75rem;
             border-top: 1px solid #eaeef2;
             padding-top: 1.8rem;
-            letter-spacing: 0.2px;
         }
 
         .hub-footer a {
@@ -415,7 +433,7 @@
             text-decoration: underline;
         }
 
-        /* ---------- MODAL (minimal) ---------- */
+        /* ---------- MODAL ---------- */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -449,12 +467,6 @@
             align-items: center;
             gap: 0.5rem;
             letter-spacing: -0.3px;
-        }
-
-        .modal-card h2 i {
-            color: #1a1a2e;
-            opacity: 0.6;
-            font-size: 1.2rem;
         }
 
         .modal-card .modal-sub {
@@ -545,7 +557,7 @@
             margin-bottom: 0.6rem;
         }
 
-        /* ---------- EMPTY STATE (minimal) ---------- */
+        /* ---------- EMPTY STATE ---------- */
         .empty-state {
             text-align: center;
             padding: 3.5rem 2rem;
@@ -584,39 +596,36 @@
             body {
                 padding: 1.5rem 1rem;
             }
-
             .main-site-card {
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 1.5rem;
             }
-
             .main-site-text .icon-circle {
                 width: 38px;
                 height: 38px;
                 font-size: 1.1rem;
             }
-
             .main-site-text h2 {
                 font-size: 1.05rem;
             }
-
             .main-site-btn {
                 width: 100%;
                 justify-content: center;
             }
-
             .app-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 0.9rem;
             }
-
             .modal-card {
                 padding: 1.5rem;
             }
-
-            .hub-header .logo {
-                font-size: 1.5rem;
+            .hub-header {
+                flex-direction: column;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
             }
         }
 
@@ -624,33 +633,22 @@
             .app-grid {
                 grid-template-columns: 1fr;
             }
-
-            .hub-header .logo {
-                font-size: 1.3rem;
-            }
-
             .section-title {
                 flex-direction: column;
                 align-items: stretch;
             }
-
             .add-app-btn {
                 justify-content: center;
             }
-
             .modal-card .form-row {
                 flex-direction: column;
             }
-
-            .app-card .new-badge {
-                font-size: 0.5rem;
-                padding: 0.1rem 0.5rem;
-                top: 10px;
-                right: 10px;
+            .header-actions button {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.8rem;
             }
         }
 
-        /* ---------- UTILITY ---------- */
         .hidden {
             display: none !important;
         }
@@ -673,12 +671,23 @@
 
         <!-- ===== HEADER ===== -->
         <header class="hub-header">
-            <div class="logo">
-                <i class="fas fa-rocket"></i> LaunchPad
+            <div class="left">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i> LaunchPad
+                </div>
+                <p class="subtitle">
+                    <i class="fas fa-calendar-plus"></i> Newly launched apps highlighted · all traffic routes through the main site
+                </p>
             </div>
-            <p class="subtitle">
-                <i class="fas fa-calendar-plus"></i> Newly launched apps highlighted · all traffic routes through the main site
-            </p>
+            <div class="header-actions">
+                <button id="exportBtn" title="Export all apps as JSON">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="import-btn" title="Import apps from JSON file">
+                    <i class="fas fa-upload"></i> Import
+                    <input type="file" id="importInput" accept=".json" />
+                </button>
+            </div>
         </header>
 
         <!-- ===== MAIN WEBSITE SPOTLIGHT ===== -->
@@ -710,7 +719,7 @@
         </div>
 
         <div class="app-grid" id="appGrid">
-            <!-- cards injected by JS -->
+            <!-- injected by JS -->
         </div>
 
         <!-- ===== FOOTER ===== -->
@@ -730,14 +739,11 @@
         <div class="modal-card">
             <h2><i class="fas fa-plus"></i> Add New App</h2>
             <p class="modal-sub">Enter the details below to add an application.</p>
-
             <form id="addAppForm">
                 <label for="appName">App Name *</label>
                 <input type="text" id="appName" placeholder="e.g. Analytics" required />
-
                 <label for="appDesc">Description</label>
                 <input type="text" id="appDesc" placeholder="Brief description" />
-
                 <div class="form-row">
                     <div>
                         <label for="appIcon">Icon (FontAwesome)</label>
@@ -753,14 +759,11 @@
                         </select>
                     </div>
                 </div>
-
                 <label for="appRoute">Route (link) *</label>
                 <input type="text" id="appRoute" placeholder="/analytics" required />
-
                 <label for="appImage">Image URL (optional)</label>
                 <input type="url" id="appImage" placeholder="https://example.com/logo.png" />
                 <div class="helper-text">If provided, this image replaces the icon.</div>
-
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
                     <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Add</button>
@@ -773,7 +776,7 @@
         (function() {
             'use strict';
 
-            // ---------- PWA: GENERATE MANIFEST ----------
+            // ---------- PWA MANIFEST ----------
             function generateManifest() {
                 const sizes = [192, 512];
                 const icons = sizes.map(size => {
@@ -781,19 +784,16 @@
                     canvas.width = size;
                     canvas.height = size;
                     const ctx = canvas.getContext('2d');
-
                     const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size);
                     gradient.addColorStop(0, '#2d2d4a');
                     gradient.addColorStop(1, '#1a1a2e');
                     ctx.fillStyle = gradient;
                     ctx.fillRect(0, 0, size, size);
-
                     ctx.font = `${size * 0.55}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillStyle = 'white';
                     ctx.fillText('🚀', size / 2, size / 2 + size * 0.05);
-
                     return {
                         src: canvas.toDataURL('image/png'),
                         sizes: `${size}x${size}`,
@@ -801,7 +801,6 @@
                         purpose: 'any maskable'
                     };
                 });
-
                 const manifest = {
                     name: 'LaunchPad',
                     short_name: 'LaunchPad',
@@ -812,7 +811,6 @@
                     theme_color: '#1a1a2e',
                     icons: icons
                 };
-
                 const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 document.getElementById('manifestLink').href = url;
@@ -892,31 +890,25 @@
                     const statusClass = app.status === 'live' ? '' :
                         app.status === 'pending' ? 'pending' : 'maintenance';
                     const statusLabel = app.status.charAt(0).toUpperCase() + app.status.slice(1);
-
                     let isNew = false;
                     if (newestDate) {
                         const diff = daysBetween(app.dateAdded, newestDate);
                         if (diff <= 7) isNew = true;
                     }
-
                     const dateFormatted = formatDate(app.dateAdded);
-
                     let iconHtml = '';
                     if (app.image && app.image.trim() !== '') {
                         iconHtml = `<img src="${app.image}" alt="${app.name}" loading="lazy" />`;
                     } else {
                         iconHtml = `<i class="fas ${app.icon || 'fa-cube'}"></i>`;
                     }
-
                     return `
                             <div class="app-card" data-app-id="${app.id}">
                                 ${isNew ? `<div class="new-badge"><i class="fas fa-bolt"></i> New</div>` : ''}
                                 <div class="app-icon">${iconHtml}</div>
                                 <h3>${app.name}</h3>
                                 <p class="app-desc">${app.description || 'No description'}</p>
-                                <div class="app-date">
-                                    <i class="far fa-calendar-alt"></i> ${dateFormatted}
-                                </div>
+                                <div class="app-date"><i class="far fa-calendar-alt"></i> ${dateFormatted}</div>
                                 <div class="app-meta">
                                     <span class="app-status ${statusClass}">
                                         <i class="fas fa-circle" style="font-size: 0.3rem; margin-right: 4px; vertical-align: middle;"></i>
@@ -944,6 +936,57 @@
                 renderApps();
             }
 
+            // ---------- EXPORT ----------
+            function exportApps() {
+                if (apps.length === 0) {
+                    alert('No apps to export.');
+                    return;
+                }
+                const dataStr = JSON.stringify(apps, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `launchpad-backup-${todayStr()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // ---------- IMPORT ----------
+            function importApps(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!Array.isArray(imported)) {
+                            throw new Error('Invalid format: expected an array.');
+                        }
+                        // Validate basic structure
+                        const valid = imported.every(app =>
+                            typeof app === 'object' &&
+                            app.id !== undefined &&
+                            app.name &&
+                            app.route
+                        );
+                        if (!valid) {
+                            throw new Error('Some apps are missing required fields (id, name, route).');
+                        }
+                        // Replace current apps with imported ones
+                        apps = imported.map(app => ({ ...app, image: app.image || '' }));
+                        // Update nextId
+                        nextId = apps.reduce((max, a) => Math.max(max, a.id), 0) + 1;
+                        saveApps(apps);
+                        renderApps();
+                        alert(`Successfully imported ${apps.length} apps.`);
+                    } catch (err) {
+                        alert('Failed to import file: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
             // ---------- ROUTING ----------
             function routeTraffic(destination) {
                 const mainUrl = window.location.origin + window.location.pathname;
@@ -955,33 +998,20 @@
             function showRoutingMessage(destination, fullUrl) {
                 const existing = document.querySelector('.routing-overlay');
                 if (existing) existing.remove();
-
                 const overlay = document.createElement('div');
                 overlay.className = 'routing-overlay';
                 overlay.style.cssText = `
-                        position: fixed;
-                        inset: 0;
-                        background: rgba(26, 26, 46, 0.6);
-                        backdrop-filter: blur(4px);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        z-index: 9999;
-                        padding: 2rem;
+                        position: fixed; inset: 0; background: rgba(26,26,46,0.6);
+                        backdrop-filter: blur(4px); display: flex; align-items: center;
+                        justify-content: center; z-index: 9999; padding: 2rem;
                         animation: fadeIn 0.2s ease;
                     `;
-
                 const card = document.createElement('div');
                 card.style.cssText = `
-                        background: white;
-                        border-radius: 18px;
-                        max-width: 480px;
-                        width: 100%;
-                        padding: 2rem 2rem 1.8rem;
-                        text-align: center;
+                        background: white; border-radius: 18px; max-width: 480px;
+                        width: 100%; padding: 2rem 2rem 1.8rem; text-align: center;
                         box-shadow: 0 24px 60px rgba(0,0,0,0.2);
                     `;
-
                 card.innerHTML = `
                         <div style="font-size: 2.4rem; margin-bottom: 0.6rem;">🚀</div>
                         <h2 style="font-size: 1.3rem; font-weight: 600; color: #1a1a2e; margin-bottom: 0.3rem; letter-spacing: -0.3px;">
@@ -993,28 +1023,15 @@
                         <div style="background: #f6f8fa; border-radius: 10px; padding: 0.6rem 0.8rem; margin-bottom: 1.4rem; word-break: break-all; font-size: 0.75rem; color: #6b7280; border: 1px solid #eaeef2;">
                             ${fullUrl}
                         </div>
-                        <button id="closeRoutingOverlay" style="
-                            background: #1a1a2e;
-                            color: white;
-                            border: none;
-                            padding: 0.5rem 1.6rem;
-                            border-radius: 40px;
-                            font-weight: 500;
-                            font-size: 0.9rem;
-                            cursor: pointer;
-                            transition: background 0.2s;
-                            font-family: 'Inter', sans-serif;
-                        ">
+                        <button id="closeRoutingOverlay" style="background: #1a1a2e; color: white; border: none; padding: 0.5rem 1.6rem; border-radius: 40px; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; font-family: 'Inter', sans-serif;">
                             Got it
                         </button>
                         <p style="margin-top: 0.8rem; font-size: 0.7rem; color: #9ca3af;">
                             <i class="fas fa-info-circle"></i> In production, you'd be redirected.
                         </p>
                     `;
-
                 overlay.appendChild(card);
                 document.body.appendChild(overlay);
-
                 document.getElementById('closeRoutingOverlay').addEventListener('click', function() {
                     overlay.remove();
                 });
@@ -1060,19 +1077,16 @@
 
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 const name = document.getElementById('appName').value.trim();
                 const description = document.getElementById('appDesc').value.trim();
                 const icon = document.getElementById('appIcon').value.trim() || 'fa-cube';
                 const status = document.getElementById('appStatus').value;
                 const route = document.getElementById('appRoute').value.trim();
                 const image = document.getElementById('appImage').value.trim();
-
                 if (!name || !route) {
                     alert('App Name and Route are required.');
                     return;
                 }
-
                 const newApp = {
                     id: nextId++,
                     name,
@@ -1083,7 +1097,6 @@
                     dateAdded: todayStr(),
                     image: image || ''
                 };
-
                 apps.push(newApp);
                 saveApps(apps);
                 renderApps();
@@ -1096,7 +1109,6 @@
                 e.preventDefault();
                 routeTraffic('/');
             });
-
             document.getElementById('footerMainLink').addEventListener('click', function(e) {
                 e.preventDefault();
                 routeTraffic('/');
@@ -1110,13 +1122,23 @@
                     if (!isNaN(appId)) deleteApp(appId);
                     return;
                 }
-
                 const link = e.target.closest('.app-link');
                 if (link) {
                     e.preventDefault();
                     const route = link.getAttribute('data-route');
                     if (route) routeTraffic(route);
                 }
+            });
+
+            // ---------- EXPORT / IMPORT ----------
+            document.getElementById('exportBtn').addEventListener('click', exportApps);
+
+            document.getElementById('importInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                importApps(file);
+                // reset input so same file can be re-imported
+                e.target.value = '';
             });
 
             // ---------- SERVICE WORKER ----------
@@ -1130,7 +1152,7 @@
 
             // ---------- INIT ----------
             renderApps();
-            console.log('🚀 LaunchPad · minimal UI ready.');
+            console.log('🚀 LaunchPad · minimal UI with import/export ready.');
         })();
     </script>
 
